@@ -11,6 +11,7 @@ mongoose.connect("mongodb://localhost/testTest", {}, err => {
 
 const Dog = require("./Dog");
 const expect = chai.expect;
+const assert = chai.assert;
 
 describe("Dogs", () => {
   let dogId;
@@ -25,20 +26,20 @@ describe("Dogs", () => {
               console.log(err);
               done();
           }
-        dogId = savedDog._id;
+        dogId = savedDog._id.toString();
         done();
       })
   });
 
-  afterEach(done => {
-      Dog.remove({}, err => {
-          if (err) console.log(err);
-          return done();
-      });
-  });
+//   afterEach(done => {
+//       Dog.remove({}, err => {
+//           if (err) console.log(err);
+//           return done();
+//       });
+//   });
 
   describe("GET to /api/dogs", () => {
-    it("should get a list of dog breeds", done => {
+    it.skip("should get a list of dog breeds", done => {
       chai
         .request(server)
         .get('/api/dogs')
@@ -47,7 +48,10 @@ describe("Dogs", () => {
                 console.log(err);
                 return done();
             }
+            const {_id, name, breed} = response.body[0];
             expect(response.status).to.equal(200);
+            assert.typeOf(response.body, 'array');
+            expect(_id).to.equal(dogId);
             return done();
         })
     });
@@ -55,8 +59,8 @@ describe("Dogs", () => {
 
 
 describe('POST to /api/dogPost', () => {
-    it('should add a new dog to DB', done => {
-        Dog.find({})
+    it.skip('should add a new dog to DB', done => {
+        const dogs = Dog.find({})
         chai
             .request(server)
             .post('/api/dogPost')
@@ -66,7 +70,29 @@ describe('POST to /api/dogPost', () => {
                     return done();
                 }
                 // console.log(response);
-                expect(response.status).to.equal(201);
+                expect(response.status).to.equal(201)
+                expect(response.body.name).to.equal('Joe');
+                expect(response.body.breed).to.equal('King Charles Cavalier');
+                return done();
+            })
+    })
+})
+
+describe('PUT to /api/dogs/id', () => {
+    it('should update a dog with a specific ID', done => {
+        // const { id } = req.params._id
+        // const dogPost = {name: req.body.name, breed: req.body.breed};
+        chai
+            .request(server)
+            .put('/api/dogs/5ae244441bb61126fc6a5527')
+            .send({name: 'putDog', breed:'breedofPutDog' })
+            .end((err, response) => {
+                if(err) {
+                    console.log(err);
+                    return done();
+                }
+                expect(response.status).to.equal(202);
+                expect(response.body.name).to.equal('putDog');
                 return done();
             })
     })
